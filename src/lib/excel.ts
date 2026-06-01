@@ -13,7 +13,9 @@ const COLUMN_ALIASES = {
   name: ["name", "vendor_name", "vendor", "customer_name", "supplier_name", "outlet_name", "client_name"],
   latitude: ["latitude", "lat", "vendor_lat", "customer_lat", "gps_latitude"],
   longitude: ["longitude", "lng", "lon", "long", "vendor_lng", "vendor_long", "customer_lng", "gps_longitude"],
-  active_flag: ["active_flag", "active", "is_active", "enabled", "status", "dispatch_active"]
+  active_flag: ["active_flag", "active", "is_active", "enabled", "status", "dispatch_active"],
+  quantity_bundle: ["quantity_bundle", "qty_bundle", "quantity", "qty", "bundle", "bundles", "allocation", "supply_qty"],
+  phone_number: ["phone_number", "phone", "mobile", "mobile_number", "contact", "contact_number", "vendor_phone"]
 };
 
 export async function parseVendorWorkbook(file: File): Promise<ParsedWorkbook> {
@@ -40,6 +42,8 @@ export async function parseVendorWorkbook(file: File): Promise<ParsedWorkbook> {
     const latitude = toNumber(row[columnMapping.latitude]);
     const longitude = toNumber(row[columnMapping.longitude]);
     const activeFlag = parseActiveFlag(row[columnMapping.active_flag]);
+    const quantityBundle = optionalText(row[columnMapping.quantity_bundle]);
+    const phoneNumber = optionalText(row[columnMapping.phone_number]);
 
     if (!name) {
       issues.push({ row: sourceRow, severity: "error", message: "Vendor name is missing.", raw: row });
@@ -66,7 +70,7 @@ export async function parseVendorWorkbook(file: File): Promise<ParsedWorkbook> {
       return;
     }
 
-    const vendor = { name, latitude, longitude, activeFlag, sourceRow };
+    const vendor = { name, latitude, longitude, activeFlag, quantityBundle, phoneNumber, sourceRow };
     if (activeFlag) {
       vendors.push(vendor);
     } else {
@@ -116,6 +120,9 @@ export async function buildOptimizedWorkbook(result: import("@/lib/types").Optim
       latitude: result.dispatch.latitude,
       longitude: result.dispatch.longitude,
       active_flag: "N/A",
+      quantity_bundle: "N/A",
+      phone_number: "N/A",
+      delivery_check: "[ ]",
       distance_from_previous_km: 0,
       drive_time_from_previous_min: 0,
       stoppage_min: 0,
@@ -129,6 +136,9 @@ export async function buildOptimizedWorkbook(result: import("@/lib/types").Optim
       latitude: stop.latitude,
       longitude: stop.longitude,
       active_flag: stop.activeFlag,
+      quantity_bundle: stop.quantityBundle,
+      phone_number: stop.phoneNumber,
+      delivery_check: "[ ]",
       distance_from_previous_km: stop.distanceFromPreviousKm,
       drive_time_from_previous_min: stop.durationFromPreviousMin,
       stoppage_min: stop.stoppageMin,
@@ -142,6 +152,9 @@ export async function buildOptimizedWorkbook(result: import("@/lib/types").Optim
       latitude: result.dispatch.latitude,
       longitude: result.dispatch.longitude,
       active_flag: "N/A",
+      quantity_bundle: "N/A",
+      phone_number: "N/A",
+      delivery_check: "[ ]",
       distance_from_previous_km: route.legs.at(-1)?.distanceKm ?? "",
       drive_time_from_previous_min: route.legs.at(-1)?.durationMin ?? "",
       stoppage_min: 0,
@@ -183,6 +196,9 @@ export async function buildOptimizedWorkbook(result: import("@/lib/types").Optim
         to_latitude: leg.toLatitude,
         to_longitude: leg.toLongitude,
         to_active_flag: leg.toActiveFlag,
+        to_quantity_bundle: leg.toQuantityBundle,
+        to_phone_number: leg.toPhoneNumber,
+        delivery_check: leg.toType === "vendor" ? "[ ]" : "N/A",
         distance_km: leg.distanceKm,
         estimated_drive_min: leg.durationMin,
         stoppage_min: leg.stoppageMin,
@@ -207,6 +223,9 @@ export async function buildOptimizedWorkbook(result: import("@/lib/types").Optim
         to_latitude: leg.toLatitude,
         to_longitude: leg.toLongitude,
         to_active_flag: leg.toActiveFlag,
+        to_quantity_bundle: leg.toQuantityBundle,
+        to_phone_number: leg.toPhoneNumber,
+        delivery_check: leg.toType === "vendor" ? "[ ]" : "N/A",
         distance_km: leg.distanceKm,
         estimated_drive_min: leg.durationMin,
         stoppage_min: leg.stoppageMin,
@@ -227,6 +246,9 @@ export async function buildOptimizedWorkbook(result: import("@/lib/types").Optim
           latitude: stop.latitude,
           longitude: stop.longitude,
           active_flag: stop.activeFlag,
+          quantity_bundle: stop.quantityBundle,
+          phone_number: stop.phoneNumber,
+          delivery_check: "[ ]",
           source_row: stop.sourceRow
         }))
       )
@@ -240,6 +262,8 @@ export async function buildOptimizedWorkbook(result: import("@/lib/types").Optim
       latitude: vendor.latitude,
       longitude: vendor.longitude,
       active_flag: false,
+      quantity_bundle: vendor.quantityBundle,
+      phone_number: vendor.phoneNumber,
       source_row: vendor.sourceRow,
       dispatch_status: "Ignored"
     }))
@@ -379,6 +403,13 @@ function toNumber(value: unknown) {
   }
   const parsed = Number(String(value).trim());
   return Number.isFinite(parsed) ? parsed : Number.NaN;
+}
+
+function optionalText(value: unknown) {
+  if (value === null || typeof value === "undefined") {
+    return "";
+  }
+  return String(value).trim();
 }
 
 function parseActiveFlag(value: unknown) {

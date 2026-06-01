@@ -29,16 +29,16 @@ const FIXED_DISPATCH = {
   longitude: "80.254002"
 };
 
-const sampleCsv = `name,latitude,longitude,active_flag
-Adyar Store,13.0067,80.2570,TRUE
-Velachery Vendor,12.9756,80.2207,TRUE
-Taramani Outlet,12.9869,80.2435,TRUE
-Besant Nagar Store,12.9982,80.2668,TRUE
-Inactive Old Vendor,12.9600,80.2400,FALSE
-Guindy Hub,13.0102,80.2157,TRUE
-Thiruvanmiyur Shop,12.9830,80.2594,TRUE
-Pallikaranai Vendor,12.9349,80.2137,TRUE
-Madipakkam Store,12.9647,80.1961,TRUE`;
+const sampleCsv = `name,latitude,longitude,active_flag,quantity_bundle,phone_number
+Adyar Store,13.0067,80.2570,TRUE,12 bundles,9876543210
+Velachery Vendor,12.9756,80.2207,TRUE,8 bundles,9876543211
+Taramani Outlet,12.9869,80.2435,TRUE,10 bundles,9876543212
+Besant Nagar Store,12.9982,80.2668,TRUE,6 bundles,9876543213
+Inactive Old Vendor,12.9600,80.2400,FALSE,4 bundles,9876543214
+Guindy Hub,13.0102,80.2157,TRUE,14 bundles,9876543215
+Thiruvanmiyur Shop,12.9830,80.2594,TRUE,9 bundles,9876543216
+Pallikaranai Vendor,12.9349,80.2137,TRUE,7 bundles,9876543217
+Madipakkam Store,12.9647,80.1961,TRUE,11 bundles,9876543218`;
 
 export function RoutePlannerApp() {
   const [file, setFile] = useState<File | null>(null);
@@ -46,6 +46,7 @@ export function RoutePlannerApp() {
   const [maxStopsPerRoute, setMaxStopsPerRoute] = useState("10");
   const [result, setResult] = useState<OptimizationResult | null>(null);
   const [selectedRoute, setSelectedRoute] = useState<number | "all">("all");
+  const [checkedStops, setCheckedStops] = useState<Set<string>>(new Set());
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [error, setError] = useState("");
 
@@ -83,11 +84,25 @@ export function RoutePlannerApp() {
       }
       setResult(payload);
       setSelectedRoute("all");
+      setCheckedStops(new Set());
     } catch (currentError) {
       setError(currentError instanceof Error ? currentError.message : "Optimization failed.");
     } finally {
       setIsOptimizing(false);
     }
+  }
+
+  function toggleStopCheck(routeId: string, stopSequence: number) {
+    const key = `${routeId}-${stopSequence}`;
+    setCheckedStops((current) => {
+      const next = new Set(current);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
   }
 
   async function handleExport() {
@@ -295,9 +310,12 @@ export function RoutePlannerApp() {
                 <table>
                   <thead>
                     <tr>
+                      <th>Done</th>
                       <th>Route</th>
                       <th>Stop</th>
                       <th>Vendor</th>
+                      <th>Qty / bundle</th>
+                      <th>Phone</th>
                       <th>Distance</th>
                       <th>ETA</th>
                     </tr>
@@ -307,11 +325,22 @@ export function RoutePlannerApp() {
                       route.stops.map((stop) => (
                         <tr key={`${route.id}-${stop.stopSequence}`}>
                           <td>
+                            <input
+                              className="stop-checkbox"
+                              type="checkbox"
+                              checked={checkedStops.has(`${route.id}-${stop.stopSequence}`)}
+                              onChange={() => toggleStopCheck(route.id, stop.stopSequence)}
+                              aria-label={`Mark ${stop.vendorName} complete`}
+                            />
+                          </td>
+                          <td>
                             <span className="route-dot" style={{ background: route.color }} />
                             {route.routeNumber}
                           </td>
                           <td>{stop.stopSequence}</td>
                           <td>{stop.vendorName}</td>
+                          <td>{stop.quantityBundle || "-"}</td>
+                          <td>{stop.phoneNumber || "-"}</td>
                           <td>{stop.distanceFromPreviousKm} km</td>
                           <td>{stop.etaFromDispatchMin} min</td>
                         </tr>
@@ -319,7 +348,7 @@ export function RoutePlannerApp() {
                     )}
                     {!result ? (
                       <tr>
-                        <td colSpan={5}>Upload a vendor sheet or run the sample data to see route sequencing.</td>
+                        <td colSpan={8}>Upload a vendor sheet or run the sample data to see route sequencing.</td>
                       </tr>
                     ) : null}
                   </tbody>

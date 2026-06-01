@@ -73,6 +73,8 @@ function RouteLayer({ route }: { route: OptimizedRoute }) {
             <span>Lat: {stop.latitude}</span>
             <span>Lon: {stop.longitude}</span>
             <span>Active flag: {String(stop.activeFlag).toUpperCase()}</span>
+            <span>Quantity/bundle: {stop.quantityBundle || "Not provided"}</span>
+            <span>Phone: {stop.phoneNumber || "Not provided"}</span>
             <span>From previous: {stop.distanceFromPreviousKm} km</span>
             <span>ETA from dispatch: {stop.etaFromDispatchMin} min</span>
           </Tooltip>
@@ -84,6 +86,10 @@ function RouteLayer({ route }: { route: OptimizedRoute }) {
             Lat: {stop.latitude}, Lon: {stop.longitude}
             <br />
             Active flag: {String(stop.activeFlag).toUpperCase()}
+            <br />
+            Quantity/bundle: {stop.quantityBundle || "Not provided"}
+            <br />
+            Phone: {stop.phoneNumber || "Not provided"}
             <br />
             ETA: {stop.etaFromDispatchMin} min
             <br />

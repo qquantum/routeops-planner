@@ -3,6 +3,8 @@ export type VendorInput = {
   latitude: number;
   longitude: number;
   activeFlag: boolean;
+  quantityBundle: string;
+  phoneNumber: string;
   sourceRow: number;
 };
 
@@ -24,6 +26,8 @@ export type RouteStop = {
   latitude: number;
   longitude: number;
   activeFlag: boolean;
+  quantityBundle: string;
+  phoneNumber: string;
   sourceRow: number;
   stopSequence: number;
   distanceFromPreviousKm: number;
@@ -43,6 +47,8 @@ export type RouteLeg = {
   toLongitude: number;
   toType: "dispatch" | "vendor";
   toActiveFlag: boolean | "N/A";
+  toQuantityBundle: string;
+  toPhoneNumber: string;
   distanceKm: number;
   durationMin: number;
   stoppageMin: number;

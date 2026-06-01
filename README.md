@@ -6,6 +6,7 @@ Production-oriented route optimization and vendor delivery planning app for 70+ 
 
 - XLSX/CSV upload with auto-detected columns.
 - Required vendor fields: `name`, `latitude`, `longitude`, `active_flag`.
+- Optional driver fields: `quantity_bundle`, `phone_number`.
 - Automatic filtering so only `active_flag = TRUE` vendors are routed.
 - Closed-loop routing: dispatch depot -> vendor stops -> same dispatch depot.
 - Multi-vehicle route grouping.
@@ -13,6 +14,7 @@ Production-oriented route optimization and vendor delivery planning app for 70+ 
 - Leaflet/OpenStreetMap route visualization.
 - Vendor stop sequence table with route filters.
 - Optimized Excel export with route summary, stop sequence, active vendors, inactive vendors, and validation issues.
+- Driver Excel sheets include quantity/bundle, phone number, delivery check column, and Google Maps navigation links.
 
 ## Run Locally
 

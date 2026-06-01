@@ -175,7 +175,7 @@ function buildOptimizedRoute(dispatch: DispatchPoint, cluster: VendorInput[], in
     googleMapsWaypointCount: ordered.length,
     driverNavigationNote:
       ordered.length <= DRIVER_FRIENDLY_STOP_LIMIT
-        ? "Ready for one-tap Google Maps navigation."
+        ? "Open on the driver's phone at dispatch. Google Maps will use current location and show Start."
         : `This route has ${ordered.length} stops. Split to ${DRIVER_FRIENDLY_STOP_LIMIT} stops or fewer for the easiest Google Maps driver experience.`,
     path,
     totalDistanceKm: round(totalDistanceKm),
@@ -187,7 +187,6 @@ function buildOptimizedRoute(dispatch: DispatchPoint, cluster: VendorInput[], in
 function buildGoogleMapsDirectionsUrl(dispatch: DispatchPoint, ordered: VendorInput[]) {
   const params = new URLSearchParams({
     api: "1",
-    origin: coordinate(dispatch),
     destination: coordinate(dispatch),
     travelmode: "driving"
   });

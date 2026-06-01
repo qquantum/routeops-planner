@@ -253,7 +253,7 @@ export function RoutePlannerApp() {
                 <Navigation size={18} />
                 <div>
                   <h2>Driver navigation</h2>
-                  <p>Tap a route to open dispatch, all optimized stops, and return dispatch in Google Maps.</p>
+                  <p>Drivers should open this on their phone at dispatch; Google Maps uses current location and shows Start.</p>
                 </div>
               </div>
               <span className="status-pill">Free Google Maps links</span>

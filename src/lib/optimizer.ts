@@ -21,6 +21,7 @@ const ROUTE_COLORS = [
 const AVERAGE_CITY_SPEED_KMH = 28;
 const FUEL_LITERS_PER_KM = 0.105;
 const STORE_STOPPAGE_MIN = 10;
+const DRIVER_FRIENDLY_STOP_LIMIT = 10;
 
 export function haversineKm(a: { latitude: number; longitude: number }, b: { latitude: number; longitude: number }) {
   const radiusKm = 6371;
@@ -46,8 +47,13 @@ export function optimizeRoutes(params: {
   issues: OptimizationResult["issues"];
   columnMapping: Record<string, string>;
 }): OptimizationResult {
-  const routeCount = Math.max(1, Math.min(params.routeCount, params.vendors.length || 1));
-  const clustered = clusterBySweep(params.dispatch, params.vendors, routeCount, params.maxStopsPerRoute);
+  const maxStopsPerRoute = params.maxStopsPerRoute && params.maxStopsPerRoute > 0
+    ? params.maxStopsPerRoute
+    : DRIVER_FRIENDLY_STOP_LIMIT;
+  const minimumRoutesForDriverLinks = Math.ceil(params.vendors.length / maxStopsPerRoute) || 1;
+  const requestedRouteCount = Math.max(params.routeCount, minimumRoutesForDriverLinks);
+  const routeCount = Math.max(1, Math.min(requestedRouteCount, params.vendors.length || 1));
+  const clustered = clusterBySweep(params.dispatch, params.vendors, routeCount, maxStopsPerRoute);
   const naiveDistance = closedLoopDistance(params.dispatch, params.vendors);
 
   const routes = clustered
@@ -151,6 +157,7 @@ function buildOptimizedRoute(dispatch: DispatchPoint, cluster: VendorInput[], in
 
   const totalDistanceKm = closedLoopDistance(dispatch, ordered);
   const totalDurationMin = travelMinutes(totalDistanceKm) + ordered.length * STORE_STOPPAGE_MIN;
+  const googleMapsUrl = buildGoogleMapsDirectionsUrl(dispatch, ordered);
   const path: Array<[number, number]> = [
     [dispatch.latitude, dispatch.longitude],
     ...ordered.map((vendor) => [vendor.latitude, vendor.longitude] as [number, number]),
@@ -164,11 +171,36 @@ function buildOptimizedRoute(dispatch: DispatchPoint, cluster: VendorInput[], in
     color: ROUTE_COLORS[index % ROUTE_COLORS.length],
     stops,
     legs,
+    googleMapsUrl,
+    googleMapsWaypointCount: ordered.length,
+    driverNavigationNote:
+      ordered.length <= DRIVER_FRIENDLY_STOP_LIMIT
+        ? "Ready for one-tap Google Maps navigation."
+        : `This route has ${ordered.length} stops. Split to ${DRIVER_FRIENDLY_STOP_LIMIT} stops or fewer for the easiest Google Maps driver experience.`,
     path,
     totalDistanceKm: round(totalDistanceKm),
     totalDurationMin: Math.round(totalDurationMin),
     fuelEstimateLiters: round(totalDistanceKm * FUEL_LITERS_PER_KM)
   };
+}
+
+function buildGoogleMapsDirectionsUrl(dispatch: DispatchPoint, ordered: VendorInput[]) {
+  const params = new URLSearchParams({
+    api: "1",
+    origin: coordinate(dispatch),
+    destination: coordinate(dispatch),
+    travelmode: "driving"
+  });
+
+  if (ordered.length > 0) {
+    params.set("waypoints", ordered.map(coordinate).join("|"));
+  }
+
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
+}
+
+function coordinate(point: { latitude: number; longitude: number }) {
+  return `${point.latitude},${point.longitude}`;
 }
 
 function clusterBySweep(

@@ -57,6 +57,9 @@ export type OptimizedRoute = {
   color: string;
   stops: RouteStop[];
   legs: RouteLeg[];
+  googleMapsUrl: string;
+  googleMapsWaypointCount: number;
+  driverNavigationNote: string;
   path: Array<[number, number]>;
   totalDistanceKm: number;
   totalDurationMin: number;

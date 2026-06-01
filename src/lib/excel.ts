@@ -153,6 +153,20 @@ export async function buildOptimizedWorkbook(result: import("@/lib/types").Optim
 
   addSheet(
     workbook,
+    "Driver Links",
+    result.routes.map((route) => ({
+      route_number: route.routeNumber,
+      vehicle: route.vehicleName,
+      stop_count: route.stops.length,
+      total_distance_km: route.totalDistanceKm,
+      total_time_min: route.totalDurationMin,
+      google_maps_navigation: mapsLinkCell(route.googleMapsUrl),
+      navigation_note: route.driverNavigationNote
+    }))
+  );
+
+  addSheet(
+    workbook,
     "Driver Route",
     result.routes.flatMap((route) =>
       route.legs.map((leg) => ({
@@ -172,7 +186,8 @@ export async function buildOptimizedWorkbook(result: import("@/lib/types").Optim
         distance_km: leg.distanceKm,
         estimated_drive_min: leg.durationMin,
         stoppage_min: leg.stoppageMin,
-        cumulative_eta_min: leg.cumulativeEtaMin
+        cumulative_eta_min: leg.cumulativeEtaMin,
+        google_maps_navigation: mapsLinkCell(route.googleMapsUrl)
       }))
     )
   );
@@ -195,7 +210,8 @@ export async function buildOptimizedWorkbook(result: import("@/lib/types").Optim
         distance_km: leg.distanceKm,
         estimated_drive_min: leg.durationMin,
         stoppage_min: leg.stoppageMin,
-        cumulative_eta_min: leg.cumulativeEtaMin
+        cumulative_eta_min: leg.cumulativeEtaMin,
+        google_maps_navigation: mapsLinkCell(route.googleMapsUrl)
       }))
     );
   });
@@ -344,6 +360,13 @@ function addSheet(workbook: ExcelJS.Workbook, name: string, rows: Record<string,
     fgColor: { argb: "FFF6F7F8" }
   };
   worksheet.views = [{ state: "frozen", ySplit: 1 }];
+}
+
+function mapsLinkCell(url: string) {
+  return {
+    text: "Open in Google Maps",
+    hyperlink: url
+  };
 }
 
 function normalizeHeader(header: string) {

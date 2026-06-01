@@ -5,10 +5,12 @@ import {
   AlertCircle,
   CheckCircle2,
   Download,
+  ExternalLink,
   FileSpreadsheet,
   Fuel,
   Lock,
   MapPinned,
+  Navigation,
   Route,
   Upload,
   Warehouse
@@ -40,8 +42,8 @@ Madipakkam Store,12.9647,80.1961,TRUE`;
 
 export function RoutePlannerApp() {
   const [file, setFile] = useState<File | null>(null);
-  const [routeCount, setRouteCount] = useState("3");
-  const [maxStopsPerRoute, setMaxStopsPerRoute] = useState("");
+  const [routeCount, setRouteCount] = useState("1");
+  const [maxStopsPerRoute, setMaxStopsPerRoute] = useState("10");
   const [result, setResult] = useState<OptimizationResult | null>(null);
   const [selectedRoute, setSelectedRoute] = useState<number | "all">("all");
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -244,6 +246,41 @@ export function RoutePlannerApp() {
           <div className="map-panel">
             <RouteMap result={result} routes={visibleRoutes} />
           </div>
+
+          <section className="panel driver-panel">
+            <div className="panel-heading row-between">
+              <div className="panel-heading compact-heading">
+                <Navigation size={18} />
+                <div>
+                  <h2>Driver navigation</h2>
+                  <p>Tap a route to open dispatch, all optimized stops, and return dispatch in Google Maps.</p>
+                </div>
+              </div>
+              <span className="status-pill">Free Google Maps links</span>
+            </div>
+            <div className="driver-link-grid">
+              {result?.routes.map((route) => (
+                <article className="driver-route-card" key={route.id} style={{ borderLeftColor: route.color }}>
+                  <div>
+                    <strong>Route {route.routeNumber}</strong>
+                    <span>
+                      {route.stops.length} vendors - {route.totalDistanceKm} km - {route.totalDurationMin} min
+                    </span>
+                    <small>{route.driverNavigationNote}</small>
+                  </div>
+                  <a href={route.googleMapsUrl} target="_blank" rel="noreferrer" className="maps-button">
+                    <ExternalLink size={15} />
+                    Open Maps
+                  </a>
+                </article>
+              ))}
+              {!result ? (
+                <div className="empty-driver-state">
+                  Optimize routes to generate one-tap Google Maps links for drivers.
+                </div>
+              ) : null}
+            </div>
+          </section>
 
           <div className="content-grid">
             <section className="panel table-panel">
